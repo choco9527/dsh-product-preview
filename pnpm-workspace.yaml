@@ -1,0 +1,21 @@
+packages:
+  - .
+
+# Desktop currently vendors this DSH alpha instead of resolving it from the npm
+# registry. These development-only links keep the plugin on that exact runtime;
+# package.json retains registry version declarations for installation into a DSH
+# Profile.
+overrides:
+  "@deepseek-ai/cordis": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/cordis"
+  "@deepseek-ai/dsh-client-locale": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-locale"
+  "@deepseek-ai/dsh-client-ui-conversation": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-conversation"
+  "@deepseek-ai/dsh-client-ui-layout": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-layout"
+  "@deepseek-ai/dsh-client-ui-renderer": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-renderer"
+  "@deepseek-ai/dsh-client-ui-slots": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-slots"
+  "@deepseek-ai/dsh-client-ui-trajectory": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-trajectory"
+  "@deepseek-ai/dsh-host-webserver": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-host-webserver"
+  "@deepseek-ai/schemastery": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/schemastery"
+  "@types/react": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@types/react"
+  "@types/react-dom": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@types/react-dom"
+  "react": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/react"
+  "react-dom": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/react-dom"
