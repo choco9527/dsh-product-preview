@@ -1,12 +1,16 @@
-# DSH Product Preview
+# DSH 产物预览
 
-`dsh-product-preview` adds a Finder-style conversation view for local media files produced during a DSH session.
+[`English`](./README.en.md)
 
-It reads successful tool results and assistant text, discovers absolute paths to supported images, videos, and SVGA files, then assigns each path to the first timeline node that reported it. The UI keeps the original directory and file names. Only existing files under `allowedRoots` receive short-lived same-origin preview URLs.
+`dsh-product-preview` 为 DSH 对话增加类似访达分栏视图，用于浏览本地生成的媒体产物。
 
-The bundle has no product or Bot dependency. A Desktop host may optionally expose native actions such as Open, Reveal in Finder, and the context menu through `/api/product-preview/actions`.
+![产物预览三栏界面](./assets/product-preview-demo.png)
 
-## Configuration
+插件会读取成功的工具结果和助手文本，发现其中的图片、视频与 SVGA 绝对路径，并将每个文件归入最先报告该路径的对话节点。界面保留原始目录与文件名。只有位于 `allowedRoots` 下且仍存在的文件，才能获得短时有效的同源预览地址。
+
+此 bundle 不依赖特定产品或 Bot。Desktop 宿主可选地通过 `/api/product-preview/actions` 提供原生操作，例如打开、在访达中显示和右键菜单。
+
+## 配置
 
 ```yaml
 - id: product-preview
@@ -16,11 +20,11 @@ The bundle has no product or Bot dependency. A Desktop host may optionally expos
       - /absolute/path/to/your/output-directory
 ```
 
-Supported local formats are PNG, JPEG, WebP, GIF, MP4, MOV, WebM, M4V, and SVGA. The bundled `svga.lite` package lets packed installations preview SVGA files without a network download.
+支持 PNG、JPEG、WebP、GIF、MP4、MOV、WebM、M4V 与 SVGA。本包内置 `svga.lite`，因此安装后预览 SVGA 不需要再从网络下载播放器。
 
-## Development
+## 开发
 
-Use Node.js 22 or newer and pnpm through Corepack:
+使用 Node.js 22 或更新版本，以及通过 Corepack 启用的 pnpm：
 
 ```sh
 corepack pnpm install
@@ -29,4 +33,4 @@ corepack pnpm test
 corepack pnpm run package
 ```
 
-The development-only overrides in `pnpm-workspace.yaml` link the pinned DSH alpha packages to a sibling `dsh-desktop` checkout's vendored runtime. They are not included in the packed plugin manifest, so a DSH Profile still resolves the package versions declared in `package.json`.
+`pnpm-workspace.yaml` 中的开发期 override 会将固定的 DSH alpha 包链接到同级 `dsh-desktop` 检出目录中的运行时。这些 override 不会进入打包后的插件 manifest；DSH Profile 仍会按 `package.json` 中声明的版本解析依赖。
