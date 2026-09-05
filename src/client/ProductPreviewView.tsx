@@ -1,6 +1,8 @@
 /** Finder-style timeline, file-browser, and preview columns for one conversation. */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Parser, Player } from 'svga.lite'
+import type { UseChat } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { ConvViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import { productArtifacts, type ProductArtifact } from '../artifacts.ts'
@@ -10,9 +12,11 @@ import {
   validateLocalMedia,
   type ResolvedMedia,
 } from './media.ts'
-import { trajectoryProductResults } from './trajectory-results.ts'
+import { conversationProductResults } from './conversation-results.ts'
+import { FileIcon } from './FileIcon.tsx'
+import { useReturnToChat } from './submission-navigation.ts'
 
-type Props = ConvViewProps & PropsLocale<'product-preview'>
+type Props = ConvViewProps & PropsLocale<'product-preview'> & { readonly useChat: UseChat }
 
 interface TimelineNode {
   readonly id: string
@@ -26,17 +30,6 @@ interface FileTreeNode {
   readonly name: string
   readonly depth: number
   readonly artifact?: ProductArtifact
-}
-
-interface SvgaPlayer {
-  mount(item: unknown): Promise<undefined>
-  start(): void
-  destroy(): void
-}
-
-interface SvgaApi {
-  Parser: new () => { do(data: ArrayBuffer): Promise<unknown> }
-  Player: new (canvas: HTMLCanvasElement) => SvgaPlayer
 }
 
 function timelineNodes(artifacts: readonly ProductArtifact[]): readonly TimelineNode[] {
@@ -60,10 +53,12 @@ function pathParts(path: string): readonly string[] {
 function commonDirectory(artifacts: readonly ProductArtifact[]): readonly string[] {
   const directories = artifacts.map(artifact => pathParts(artifact.localPath).slice(0, -1))
   const first = directories.at(0) ?? []
-  return first.filter((part, index) => directories.every(directory => directory[index] === part))
+  const mismatch = first.findIndex((part, index) => !directories.every(directory => directory[index] === part))
+  return mismatch === -1 ? first : first.slice(0, mismatch)
 }
 
-function fileTree(artifacts: readonly ProductArtifact[]): readonly FileTreeNode[] {
+/** Keep each directory adjacent to its children, preserving original path segments. */
+export function fileTree(artifacts: readonly ProductArtifact[]): readonly FileTreeNode[] {
   const root = commonDirectory(artifacts)
   const directories = new Map<string, { name: string; depth: number }>()
   const files: FileTreeNode[] = []
@@ -84,10 +79,16 @@ function fileTree(artifacts: readonly ProductArtifact[]): readonly FileTreeNode[
     depth: value.depth,
   }))
   return [...directoryNodes, ...files].sort((left, right) => {
-    const leftDirectory = left.artifact === undefined
-    const rightDirectory = right.artifact === undefined
-    if (leftDirectory !== rightDirectory) return leftDirectory ? -1 : 1
-    return left.key.localeCompare(right.key, undefined, { numeric: true })
+    const a = left.artifact === undefined ? left.key.slice('directory:'.length).split('/') : pathParts(left.artifact.localPath).slice(root.length)
+    const b = right.artifact === undefined ? right.key.slice('directory:'.length).split('/') : pathParts(right.artifact.localPath).slice(root.length)
+    for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
+      if (a[index] === b[index]) continue
+      const aFolder = index < a.length - 1 || left.artifact === undefined
+      const bFolder = index < b.length - 1 || right.artifact === undefined
+      if (aFolder !== bFolder) return aFolder ? -1 : 1
+      return (a[index] ?? '').localeCompare(b[index] ?? '', undefined, { numeric: true })
+    }
+    return a.length - b.length
   })
 }
 
@@ -130,36 +131,35 @@ function useAvailableArtifacts(candidates: readonly ProductArtifact[]): {
   return { artifacts: state.artifacts, pending: false }
 }
 
-function SvgaPreview({ url, unsupported }: { readonly url: string | undefined; readonly unsupported: string }) {
+function SvgaPreview({ url, t }: { readonly url: string; readonly t: Props['t'] }) {
   const canvas = useRef<HTMLCanvasElement>(null)
-  const [failed, setFailed] = useState(false)
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading')
   useEffect(() => {
     let disposed = false
-    let player: SvgaPlayer | undefined
-    setFailed(false)
-    if (url === undefined || canvas.current === null) return
-    void import('svga.lite').then(module => {
-      const api = (module.default ?? module) as unknown as SvgaApi
-      if (disposed || typeof api.Parser !== 'function' || typeof api.Player !== 'function' || canvas.current === null) {
-        if (!disposed) setFailed(true)
-        return
-      }
-      void fetch(url).then(async response => {
-        if (!response.ok) throw new Error('SVGA media request failed')
-        return await new api.Parser().do(await response.arrayBuffer())
-      }).then(async item => {
-        if (disposed || canvas.current === null) return
-        player = new api.Player(canvas.current)
-        await player.mount(item)
-        if (!disposed) player.start()
-      }).catch(() => { if (!disposed) setFailed(true) })
-    }).catch(() => { if (!disposed) setFailed(true) })
+    let player: Player | undefined
+    let parser: Parser | undefined
+    const abort = new AbortController()
+    setState('loading')
+    void (async () => {
+      const response = await fetch(url, { signal: abort.signal })
+      if (!response.ok) throw new Error('SVGA media request failed')
+      const bytes = await response.arrayBuffer()
+      if (disposed) return
+      parser = new Parser({ disableWorker: true })
+      const item = await parser.do(bytes)
+      if (disposed || canvas.current === null) return
+      player = new Player(canvas.current)
+      await player.mount(item)
+      if (!disposed) { player.start(); setState('ready') }
+    })().catch(() => { if (!disposed) setState('failed') })
     return () => {
       disposed = true
+      abort.abort()
       player?.destroy()
+      parser?.destroy()
     }
   }, [url])
-  return failed || url === undefined ? <p>{unsupported}</p> : <canvas ref={canvas} />
+  return <><canvas ref={canvas} style={{ display: state === 'ready' ? 'block' : 'none' }} />{state !== 'ready' && <p role="status">{t(state === 'loading' ? 'loading' : 'svgaFailed')}</p>}</>
 }
 
 function MediaCanvas({ artifact, media, t }: {
@@ -170,7 +170,7 @@ function MediaCanvas({ artifact, media, t }: {
   const url = media?.url
   if (artifact.kind === 'image') return url === undefined ? <p>{t('unavailable')}</p> : <img alt={t('imageAlt')} src={url} />
   if (artifact.kind === 'video') return url === undefined ? <p>{t('unavailable')}</p> : <video controls preload="metadata" src={url}>{t('unsupported')}</video>
-  return <SvgaPreview unsupported={t('unsupported')} url={url} />
+  return url === undefined ? <p role="status">{t('loading')}</p> : <SvgaPreview key={url} t={t} url={url} />
 }
 
 function TimelineColumn({ nodes, selected, select, t }: {
@@ -180,9 +180,9 @@ function TimelineColumn({ nodes, selected, select, t }: {
   readonly t: Props['t']
 }) {
   return <nav aria-label={t('timeline')} className="productPreviewColumn productPreviewTimeline">
-    {nodes.map(node => <button aria-current={selected === node.id ? 'true' : undefined} className="productPreviewRow" key={node.id} onClick={() => { select(node.id) }} type="button">
-      <span className="productPreviewNodeIcon">●</span>
-      <span className="productPreviewRowText"><strong>{`${t('node')} #${String(node.seq)}`}</strong><span>{`${String(node.artifacts.length)} ${t('files')}`}</span></span>
+    {nodes.map(node => <button aria-current={selected === node.id ? 'true' : undefined} className="productPreviewRow" key={node.id} onClick={() => { select(node.id) }} title={commonDirectory(node.artifacts).at(-1) ?? node.artifacts[0]?.title} type="button">
+      <span className="productPreviewNodeIcon" aria-hidden="true" />
+      <span className="productPreviewRowText"><strong>{commonDirectory(node.artifacts).at(-1) ?? node.artifacts[0]?.title ?? t('node')}</strong><span>{`#${String(node.seq)} · ${String(node.artifacts.length)} ${t('files')}`}</span></span>
     </button>)}
   </nav>
 }
@@ -194,14 +194,16 @@ function FileColumn({ artifacts, selected, select, t }: {
   readonly t: Props['t']
 }) {
   const tree = useMemo(() => fileTree(artifacts), [artifacts])
+  const directory = commonDirectory(artifacts).at(-1)
   if (tree.length === 0) return <section className="productPreviewColumn productPreviewEmpty">{t('chooseNode')}</section>
   return <nav aria-label={t('files')} className="productPreviewColumn productPreviewFiles">
+    {directory && <div className="productPreviewRoot" title={commonDirectory(artifacts).join('/')}><FileIcon kind="folder" /><span>{directory}</span></div>}
     {tree.map(item => item.artifact === undefined
-      ? <div className="productPreviewDirectory" key={item.key} style={{ paddingInlineStart: `${String(12 + item.depth * 16)}px` }}>{`▸ ${item.name}`}</div>
+      ? <div className="productPreviewDirectory" key={item.key} style={{ paddingInlineStart: `${String(10 + item.depth * 14)}px` }}><FileIcon kind="folder" /><span>{item.name}</span></div>
       : <button aria-current={selected === item.artifact.key ? 'true' : undefined} className="productPreviewFile" key={item.key} onClick={() => { select(item.artifact as ProductArtifact) }} onContextMenu={event => {
         event.preventDefault()
         void invokeProductPreviewAction(item.artifact?.localPath ?? '', 'context-menu')
-      }} style={{ paddingInlineStart: `${String(12 + item.depth * 16)}px` }} type="button">{item.name}</button>) }
+      }} style={{ paddingInlineStart: `${String(10 + item.depth * 14)}px` }} title={item.name} type="button"><FileIcon kind={item.artifact.kind} /><span>{item.name}</span></button>) }
   </nav>
 }
 
@@ -213,19 +215,24 @@ function DetailColumn({ artifact, t }: { readonly artifact: ProductArtifact | un
     void invokeProductPreviewAction(artifact.localPath, 'context-menu')
   }}>
     <div className="productPreviewCanvas"><MediaCanvas artifact={artifact} media={media} t={t} /></div>
-    <h3>{artifact.title}</h3>
-    <dl className="productPreviewMetadata">
+    <h3 title={artifact.title}>{artifact.title}</h3>
+    <p className="productPreviewSummary">{artifact.title.split('.').at(-1)?.toUpperCase()}{media === undefined ? '' : ` · ${media.size < 1024 * 1024 ? `${(media.size / 1024).toFixed(1)} KB` : `${(media.size / 1024 / 1024).toFixed(1)} MB`}`}</p>
+    <div className="productPreviewActions"><button onClick={() => { void invokeProductPreviewAction(artifact.localPath, 'reveal') }} type="button"><FileIcon kind="folder" />{t('reveal')}</button></div>
+    <details className="productPreviewInfo"><summary>{t('details')}</summary><dl className="productPreviewMetadata">
       <div><dt>{t('file')}</dt><dd>{artifact.localPath}</dd></div>
       <div><dt>{t('source')}</dt><dd>{artifact.producer}</dd></div>
-    </dl>
-    <div className="productPreviewActions"><button onClick={() => { void invokeProductPreviewAction(artifact.localPath, 'reveal') }} type="button">{t('reveal')}</button></div>
+    </dl></details>
   </article>
 }
 
 /** Render only artifact-bearing timeline nodes with their original paths and names. */
-export function ProductPreviewView({ useTrajectory, t }: Props) {
-  const trajectory = useTrajectory(snapshot => snapshot)
-  const candidates = useMemo(() => productArtifacts(trajectoryProductResults(trajectory)), [trajectory])
+export function ProductPreviewView({ useChat, useSession, openView, t }: Props) {
+  const conversationNodes = useChat(snapshot => snapshot.legacy.nodes)
+  useReturnToChat({ useSession, openView }, conversationNodes)
+  const candidates = useMemo(
+    () => productArtifacts(conversationProductResults(conversationNodes)),
+    [conversationNodes],
+  )
   const availability = useAvailableArtifacts(candidates)
   const artifacts = availability.artifacts
   const nodes = useMemo(() => timelineNodes(artifacts), [artifacts])

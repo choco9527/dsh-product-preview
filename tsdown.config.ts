@@ -33,7 +33,6 @@ export default defineConfig([
       '@deepseek-ai/cordis',
       '@deepseek-ai/dsh-client-ui-slots',
       '@deepseek-ai/dsh-client-ui-renderer',
-      'svga.lite',
     ],
     noExternal: (id: string) => id.startsWith('@deepseek-ai/') ? undefined : true,
     outputOptions: {

@@ -1,7 +1,6 @@
-/** Project successful tool results and assistant text from one trajectory. */
+/** Project successful tool results and assistant text from Conversation nodes. */
 
-import type { ToolCallBlock } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { TrajectorySnapshot } from '@deepseek-ai/dsh-client-ui-trajectory/client'
+import type { ConversationNode, ToolCallBlock } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { ProductToolResult } from '../artifacts.ts'
 
 /** Fallback producer when retained history has a result but no matching call head. */
@@ -26,9 +25,9 @@ function subtoolProductResults(call: ToolCallBlock, nodeSeq: number): readonly P
   }, ...children]
 }
 
-/** Extract settled text while preserving the timeline node that produced it. */
-export function trajectoryProductResults(snapshot: TrajectorySnapshot): readonly ProductToolResult[] {
-  return snapshot.eventNodes.flatMap(node => {
+/** Extract settled text while preserving the Conversation node that produced it. */
+export function conversationProductResults(nodes: readonly ConversationNode[]): readonly ProductToolResult[] {
+  return nodes.flatMap(node => {
     if (node.kind === 'tool-result') return subtoolProductResults(node, node.seq)
     if (node.kind !== 'assistant') return []
     const output = node.blocks.flatMap(block => block.kind === 'text' ? [block.text] : []).join('\n')

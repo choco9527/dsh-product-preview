@@ -8,11 +8,11 @@ packages:
 overrides:
   "@deepseek-ai/cordis": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/cordis"
   "@deepseek-ai/dsh-client-locale": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-locale"
+  "@deepseek-ai/dsh-client-ui-chat": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-chat"
   "@deepseek-ai/dsh-client-ui-conversation": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-conversation"
   "@deepseek-ai/dsh-client-ui-layout": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-layout"
   "@deepseek-ai/dsh-client-ui-renderer": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-renderer"
   "@deepseek-ai/dsh-client-ui-slots": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-slots"
-  "@deepseek-ai/dsh-client-ui-trajectory": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-client-ui-trajectory"
   "@deepseek-ai/dsh-host-webserver": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/dsh-host-webserver"
   "@deepseek-ai/schemastery": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@deepseek-ai/schemastery"
   "@types/react": "link:../dsh-desktop/dsh-plugin-desktop/node_modules/@types/react"

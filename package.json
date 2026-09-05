@@ -38,14 +38,14 @@
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-layout",
         "@deepseek-ai/dsh-client-ui-conversation",
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-trajectory"
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-renderer"
       ],
       "platform": "web"
     }
   },
   "scripts": {
-    "build": "tsdown && tsc -p tsconfig.json --emitDeclarationOnly && tsc -p tsconfig.client.json --emitDeclarationOnly",
+    "build": "tsdown && node scripts/check-client-bundle.mjs && tsc -p tsconfig.json --emitDeclarationOnly && tsc -p tsconfig.client.json --emitDeclarationOnly",
     "package": "corepack pnpm run build && corepack pnpm pack --pack-destination dist",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
@@ -53,13 +53,13 @@
   },
   "dependencies": {
     "@deepseek-ai/cordis": "4.0.1",
-    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-layout": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-trajectory": "0.1.2-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-chat": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-layout": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-host-webserver": "0.1.2-alpha.3",
     "@deepseek-ai/schemastery": "^3.18.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",

@@ -2,6 +2,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
@@ -9,6 +10,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { ProductPreviewView } from './ProductPreviewView.tsx'
 import { en, zh, type ProductPreviewLocaleKey } from './locales.ts'
 import { installProductPreviewStyles } from './styles.ts'
+import { installProductPreviewTabSwipe } from './tab-swipe.ts'
 
 export const PRODUCT_PREVIEW_LOCALE_NAMESPACE = 'product-preview'
 
@@ -21,10 +23,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-/** Register the product preview tab before DSH's trajectory view. */
+/** Register the product preview tab before DSH's optional trajectory view. */
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(PRODUCT_PREVIEW_LOCALE_NAMESPACE, { zh, en }), 'product-preview: locale')
   ctx.effect(installProductPreviewStyles, 'product-preview: styles')
+  ctx.effect(() => installProductPreviewTabSwipe(() => ctx.locale.bind(PRODUCT_PREVIEW_LOCALE_NAMESPACE)('view')), 'product-preview: tab swipe')
   ctx.slots.inject('conversation.view', () => ctx.slots.register({
     name: 'conversation.view',
     id: 'product-preview',
