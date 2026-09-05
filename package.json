@@ -2,6 +2,10 @@
   "name": "dsh-product-preview",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/choco9527/dsh-product-preview.git"
+  },
   "description": "Finder-style media artifact preview for DeepSeek Harness",
   "type": "module",
   "packageManager": "pnpm@11.10.0",
@@ -23,8 +27,11 @@
     "lib/**/*.js",
     "lib/**/*.map",
     "lib/types/**/*.d.ts",
-    "vendor/*.tgz",
-    "README.md"
+    "README.md",
+    "README.en.md",
+    "THIRD_PARTY_NOTICES.md",
+    "assets/product-preview-demo.png",
+    "screenshots.json"
   ],
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
@@ -51,8 +58,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "pack": "corepack pnpm pack"
   },
-  "dependencies": {
-    "@deepseek-ai/cordis": "4.0.1",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
     "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.3",
     "@deepseek-ai/dsh-client-ui-chat": "0.1.2-alpha.3",
     "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.3",
@@ -62,10 +69,27 @@
     "@deepseek-ai/dsh-host-webserver": "0.1.2-alpha.3",
     "@deepseek-ai/schemastery": "^3.18.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "svga.lite": "file:vendor/svga.lite-1.6.1.tgz"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@deepseek-ai/dsh-api-session-controller": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-api-workspace-controller": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-attachment": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-brand": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-store": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-session": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-client-ui-theme": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-commands": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-llm": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-llm-retry": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-permission-presets": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-session": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-token-meter": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-tool-todo": "0.1.2-alpha.3",
+    "@deepseek-ai/dsh-workspace": "0.1.2-alpha.3",
+    "svga.lite": "1.6.1",
     "@types/node": "^22.15.32",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

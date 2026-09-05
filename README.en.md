@@ -16,6 +16,18 @@ It reads successful tool results and assistant text, discovers absolute paths to
 
 The bundle has no product or Bot dependency. A Desktop host may optionally expose native actions such as Open, Reveal in Finder, and the context menu through `/api/product-preview/actions`.
 
+## Installation and compatibility
+
+Built against DSH Web / Desktop host packages at `0.1.2-alpha.3`; other versions have not been verified. Requires Node.js `^22.19.0 || >=24.0.0`.
+
+Use a prebuilt package from [GitHub Releases](https://github.com/choco9527/dsh-product-preview/releases) in the target profile:
+
+```sh
+dsh plugin --profile web add https://github.com/choco9527/dsh-product-preview/releases/latest/download/dsh-product-preview.tgz
+```
+
+For Desktop, replace `web` with the actual profile name. The plugin reuses the host's DSH and React dependencies and ships neither Desktop nor a Bot. Configure allowed directories after installation; the empty default does not expose the whole disk.
+
 ## Configuration
 
 ```yaml
@@ -39,4 +51,6 @@ corepack pnpm test
 corepack pnpm run package
 ```
 
-The development-only overrides in `pnpm-workspace.yaml` link the pinned DSH alpha packages to a sibling `dsh-desktop` checkout's vendored runtime. They are not included in the packed plugin manifest, so a DSH Profile still resolves the package versions declared in `package.json`.
+Development dependencies install from the public npm registry without a sibling Desktop checkout. DSH and React are host peer dependencies. SVGA is a development dependency compiled into the browser bundle; installing a prebuilt package requires no build scripts on the user's machine.
+
+Development dependencies supply the host types used by the plugin. `skipLibCheck` skips validation inside third-party declarations: the DSH alpha declarations reference host-generated RPC types that cannot be fully checked in a standalone plugin. Plugin source remains checked with `strict` enabled.
