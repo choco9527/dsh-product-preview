@@ -52,4 +52,39 @@ describe('product artifact projection', () => {
       isError: false,
     }])).toEqual([])
   })
+
+  it.each('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))('preserves drive %s in text and JSON media paths', drive => {
+    for (const path of [
+      `${drive}:\\Users\\Operator\\BBA 交付\\静态图-01.png`,
+      `${drive.toLowerCase()}:/BBA 交付/动画.SVGA`,
+    ]) {
+      for (const output of [`源图已保存到 \`${path}\`。`, JSON.stringify({ job: { files: [path] } })]) {
+        expect(productArtifacts([{
+          callId: 'windows', nodeSeq: 1, toolName: 'image_job', output, isError: false,
+        }])).toEqual([expect.objectContaining({ localPath: path, title: path.split(/[\\/]/u).at(-1) })])
+      }
+    }
+  })
+
+  it.each([
+    String.raw`\\server\共享 素材\活动\透明图.png`,
+    String.raw`\\192.168.1.20\delivery\preview.mp4`,
+  ])('preserves UNC media path %s', path => {
+    for (const output of [path, JSON.stringify({ filePath: path })]) {
+      expect(productArtifacts([{
+        callId: 'unc', nodeSeq: 2, toolName: 'media', output, isError: false,
+      }])).toEqual([expect.objectContaining({ localPath: path })])
+    }
+  })
+
+  it.each([
+    'C:relative.png', String.raw`relative\image.png`,
+    'https://example.test/C:/image.png', 'file:///C:/image.png',
+    '//example.test/image.png', String.raw`\\?\C:\image.png`,
+    String.raw`\\.\device\image.png`,
+  ])('does not extract a partial path from %s', output => {
+    expect(productArtifacts([{
+      callId: 'invalid', nodeSeq: 3, toolName: 'media', output, isError: false,
+    }])).toEqual([])
+  })
 })

@@ -29,8 +29,10 @@ interface JsonRecord {
 const IMAGE_EXTENSIONS = new Set(['gif', 'jpeg', 'jpg', 'png', 'webp'])
 const VIDEO_EXTENSIONS = new Set(['m4v', 'mov', 'mp4', 'webm'])
 const MEDIA_PATH_SUFFIX = String.raw`(?:gif|jpe?g|m4v|mov|mp4|png|svga|webm|webp)`
+// Preserve drive letters and UNC shares; do not reinterpret URI suffixes as POSIX paths.
+const LOCAL_MEDIA_ROOT = String.raw`(?:[a-z]:[\\/]|\\\\(?![?.]\\)[^\\/\s]+\\[^\\/\r\n]+\\|(?<![a-z0-9+.-]:)/(?!/))`
 const LOCAL_MEDIA_PATH = new RegExp(
-  String.raw`(?:^|[\s:：\x60"'（(])(?<path>/(?!/)[^\r\n]*?\.${MEDIA_PATH_SUFFIX})(?=$|[\s,，。;；)）\]】\x60"'])`,
+  String.raw`(?:^|[\s:：\x60"'（(])(?<path>${LOCAL_MEDIA_ROOT}[^\r\n]*?\.${MEDIA_PATH_SUFFIX})(?=$|[\s,，。;；)）\]】\x60"'])`,
   'giu',
 )
 

@@ -14,6 +14,8 @@
 
 此 bundle 不依赖特定产品或 Bot。Desktop 宿主可选地通过 `/api/product-preview/actions` 提供原生操作，例如打开、在访达中显示和右键菜单。
 
+路径识别支持 POSIX 绝对路径、Windows 各盘符路径（正斜杠或反斜杠）和 UNC 共享路径（`\\server\share\image.png`），保留中文与空格。网络 URL、相对路径和 Windows 设备路径不作为本地媒体产物。识别路径不授予访问权限；共享路径同样需要位于宿主配置的 `allowedRoots` 下。
+
 ## 安装与兼容性
 
 面向 DSH Web / Desktop 的 `0.1.2-alpha.3` 宿主依赖构建；其他版本尚未验证。使用 Node.js `^22.19.0 || >=24.0.0`。

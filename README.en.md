@@ -16,6 +16,8 @@ It reads successful tool results and assistant text, discovers absolute paths to
 
 The bundle has no product or Bot dependency. A Desktop host may optionally expose native actions such as Open, Reveal in Finder, and the context menu through `/api/product-preview/actions`.
 
+Path discovery supports absolute POSIX paths, Windows drive paths with either slash style, and UNC shares (`\\server\share\image.png`), preserving Unicode and spaces. Network URLs, relative paths, and Windows device paths are not local media artifacts. Discovery does not grant access; shared paths must also be under the host's configured `allowedRoots`.
+
 ## Installation and compatibility
 
 Built against DSH Web / Desktop host packages at `0.1.2-alpha.3`; other versions have not been verified. Requires Node.js `^22.19.0 || >=24.0.0`.
