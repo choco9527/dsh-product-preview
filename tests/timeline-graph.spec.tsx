@@ -5,6 +5,7 @@ const observed = vi.hoisted(() => ({ props: {} as Record<string, unknown> }))
 vi.mock('@xyflow/react', () => ({
   ReactFlow: (props: Record<string, unknown>) => { observed.props = props; return null },
   Handle: () => null, Controls: () => null, Background: () => null, Position: { Top: 'top', Bottom: 'bottom' },
+  PanOnScrollMode: { Vertical: 'vertical' },
 }))
 import TimelineGraph, { TimelineGraphCard, timelineGraphLayout } from '../src/client/TimelineGraph.tsx'
 
@@ -17,7 +18,8 @@ describe('read-only conversation graph', () => {
   it('disables editing and delegates selection to the existing preview', () => {
     const select = vi.fn()
     renderToStaticMarkup(createElement(TimelineGraph, { items: [{ id: 'image', content: 'PNG' }, { id: 'svga', content: 'SVGA' }], selected: 'image', select, label: 'Order', zoomIn: '+', zoomOut: '-', fit: 'Fit' }))
-    expect(observed.props).toMatchObject({ nodesDraggable: false, nodesConnectable: false, elementsSelectable: false, deleteKeyCode: null })
+    expect(observed.props).toMatchObject({ nodesDraggable: false, nodesConnectable: false, elementsSelectable: false, deleteKeyCode: null,
+      zoomOnScroll: false, panOnScroll: true, panOnScrollMode: 'vertical' })
     const nodes = observed.props.nodes as { data: Parameters<typeof TimelineGraphCard>[0]['data'] }[]
     ;(observed.props.onNodeClick as (_: unknown, node: typeof nodes[number]) => void)(undefined, nodes[1]!)
     expect(select).toHaveBeenCalledWith('svga')

@@ -1,6 +1,6 @@
 /** Read-only conversation-order navigation; edges do not assert artifact provenance. */
 import { useMemo, type ReactNode } from 'react'
-import { Background, Controls, Handle, Position, ReactFlow, type Node, type NodeProps } from '@xyflow/react'
+import { Background, Controls, Handle, PanOnScrollMode, Position, ReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import flowCss from '@xyflow/react/dist/style.css?inline'
 
 type TimelineData = { content: ReactNode; active: boolean; select: () => void }
@@ -42,6 +42,7 @@ export default function TimelineGraph({ items, selected, select, label, zoomIn, 
       nodesDraggable={false} nodesConnectable={false} elementsSelectable={false} nodesFocusable={false}
       edgesFocusable={false} deleteKeyCode={null} selectionKeyCode={null} multiSelectionKeyCode={null}
       onNodeClick={(_, node) => { node.data.select() }}
+      zoomOnScroll={false} panOnScroll panOnScrollMode={PanOnScrollMode.Vertical}
       zoomOnDoubleClick={false} preventScrolling={false}
       ariaLabelConfig={{ 'controls.zoomIn.ariaLabel': zoomIn, 'controls.zoomOut.ariaLabel': zoomOut, 'controls.fitView.ariaLabel': fit }}>
       <Background gap={18} /><Controls showInteractive={false} />
