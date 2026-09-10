@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsdown'
+import { readFileSync } from 'node:fs'
 
 const PACKAGE_NAME = 'dsh-product-preview'
 
@@ -16,6 +17,10 @@ export default defineConfig([
   },
   {
     name: `${PACKAGE_NAME}/client`,
+    define: { 'import.meta.env': '{"MODE":"production"}', 'process.env.NODE_ENV': '"production"' },
+    plugins: [{ name: 'inline-flow-css', load(id) {
+      if (id.endsWith('.css?inline')) return `export default ${JSON.stringify(readFileSync(id.slice(0, -7), 'utf8'))}`
+    } }],
     entry: { client: 'src/client/index.ts' },
     tsconfig: 'tsconfig.client.json',
     outDir: 'lib',
@@ -36,6 +41,7 @@ export default defineConfig([
     ],
     noExternal: (id: string) => id.startsWith('@deepseek-ai/') ? undefined : true,
     outputOptions: {
+      codeSplitting: false,
       entryFileNames: 'client.js',
       banner: `window.__ModuleLoader__.load({ id: ${JSON.stringify(PACKAGE_NAME)}, factory: (require) => {`,
       footer: 'return module.exports; } });',

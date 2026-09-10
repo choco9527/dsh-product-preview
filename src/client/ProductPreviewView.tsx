@@ -1,6 +1,6 @@
 /** Finder-style timeline, file-browser, and preview columns for one conversation. */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Parser, Player } from 'svga.lite'
 import type { UseChat } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { ConvViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -17,10 +17,12 @@ import { FileIcon } from './FileIcon.tsx'
 import { useReturnToChat } from './submission-navigation.ts'
 
 type Props = ConvViewProps & PropsLocale<'product-preview'> & { readonly useChat: UseChat }
+const TimelineGraph = lazy(() => import('./TimelineGraph.tsx'))
 
 interface TimelineNode {
   readonly id: string
   readonly seq: number
+  readonly time?: number
   readonly producer: string
   readonly artifacts: readonly ProductArtifact[]
 }
@@ -32,13 +34,15 @@ interface FileTreeNode {
   readonly artifact?: ProductArtifact
 }
 
-function timelineNodes(artifacts: readonly ProductArtifact[]): readonly TimelineNode[] {
+/** Group files by their first reporting event, retaining its timestamp and sequence. */
+export function timelineNodes(artifacts: readonly ProductArtifact[]): readonly TimelineNode[] {
   const nodes = new Map<string, TimelineNode>()
   for (const artifact of artifacts) {
     const existing = nodes.get(artifact.nodeId)
     nodes.set(artifact.nodeId, existing === undefined ? {
       id: artifact.nodeId,
       seq: artifact.nodeSeq,
+      ...(artifact.nodeTime === undefined ? {} : { time: artifact.nodeTime }),
       producer: artifact.producer,
       artifacts: [artifact],
     } : { ...existing, artifacts: [...existing.artifacts, artifact] })
@@ -173,7 +177,26 @@ function MediaCanvas({ artifact, media, t }: {
   return url === undefined ? <p role="status">{t('loading')}</p> : <SvgaPreview key={url} t={t} url={url} />
 }
 
-function TimelineColumn({ nodes, selected, select, t }: {
+function TimelineTimestamp({ time }: { readonly time: number | undefined }) {
+  if (time === undefined) return null
+  const date = new Date(time)
+  if (!Number.isFinite(date.getTime())) return null
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const label = `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return <time className="productPreviewNodeTime" dateTime={date.toISOString()} title={date.toLocaleString()}>{label}</time>
+}
+
+/** Shared event labels retain the user's timestamp and subdued sequence presentation. */
+function TimelineLabel({ node, t }: { readonly node: TimelineNode; readonly t: Props['t'] }) {
+  return <span className="productPreviewRowText">
+    <strong>{commonDirectory(node.artifacts).at(-1) ?? node.artifacts[0]?.title ?? t('node')}</strong>
+    <span className="productPreviewNodeMeta"><span className="productPreviewNodeSequence">{`#${String(node.seq)}`}</span>{` · ${String(node.artifacts.length)} ${t('files')}`}</span>
+    <TimelineTimestamp time={node.time} />
+  </span>
+}
+
+/** Show each artifact-bearing node with its recorded time and subdued sequence number. */
+export function TimelineColumn({ nodes, selected, select, t }: {
   readonly nodes: readonly TimelineNode[]
   readonly selected: string | undefined
   readonly select: (id: string) => void
@@ -182,7 +205,7 @@ function TimelineColumn({ nodes, selected, select, t }: {
   return <nav aria-label={t('timeline')} className="productPreviewColumn productPreviewTimeline">
     {nodes.map(node => <button aria-current={selected === node.id ? 'true' : undefined} className="productPreviewRow" key={node.id} onClick={() => { select(node.id) }} title={commonDirectory(node.artifacts).at(-1) ?? node.artifacts[0]?.title} type="button">
       <span className="productPreviewNodeIcon" aria-hidden="true" />
-      <span className="productPreviewRowText"><strong>{commonDirectory(node.artifacts).at(-1) ?? node.artifacts[0]?.title ?? t('node')}</strong><span>{`#${String(node.seq)} · ${String(node.artifacts.length)} ${t('files')}`}</span></span>
+      <TimelineLabel node={node} t={t} />
     </button>)}
   </nav>
 }
@@ -250,7 +273,11 @@ export function ProductPreviewView({ useChat, useSession, openView, t }: Props) 
   if (nodes.length === 0) return <section className="productPreviewView productPreviewEmpty">{t('noArtifact')}</section>
   return <section aria-label={t('title')} className="productPreviewView">
     <div className="productPreviewColumns">
-      <TimelineColumn nodes={nodes} selected={selectedNode?.id} select={id => { setSelectedNodeId(id); setSelectedKey(undefined) }} t={t} />
+      <Suspense fallback={<TimelineColumn nodes={nodes} selected={selectedNode?.id} select={setSelectedNodeId} t={t} />}>
+        <TimelineGraph items={nodes.map(node => ({ id: node.id, content: <TimelineLabel node={node} t={t} /> }))}
+          selected={selectedNode?.id} select={id => { setSelectedNodeId(id); setSelectedKey(undefined) }}
+          label={t('graphOrder')} zoomIn={t('zoomIn')} zoomOut={t('zoomOut')} fit={t('fitGraph')} />
+      </Suspense>
       <FileColumn artifacts={selectedNode?.artifacts ?? []} selected={selected?.key} select={artifact => { setSelectedKey(artifact.key) }} t={t} />
       <DetailColumn artifact={selected} t={t} />
     </div>

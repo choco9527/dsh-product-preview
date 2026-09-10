@@ -7,6 +7,8 @@ export interface ProductArtifact {
   readonly key: string
   readonly nodeId: string
   readonly nodeSeq: number
+  /** Unix epoch milliseconds of the result that first reported this file. */
+  readonly nodeTime?: number
   readonly producer: string
   readonly localPath: string
   readonly kind: ProductMediaKind
@@ -17,6 +19,8 @@ export interface ProductArtifact {
 export interface ProductToolResult {
   readonly callId: string
   readonly nodeSeq: number
+  /** Unix epoch milliseconds from the source conversation event, when available. */
+  readonly nodeTime?: number
   readonly toolName: string
   readonly output: string
   readonly isError: boolean
@@ -96,6 +100,7 @@ export function productArtifacts(results: readonly ProductToolResult[]): readonl
         key: `${result.callId}:${localPath}`,
         nodeId: result.callId,
         nodeSeq: result.nodeSeq,
+        ...(result.nodeTime === undefined ? {} : { nodeTime: result.nodeTime }),
         producer: result.toolName,
         localPath,
         kind,

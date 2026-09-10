@@ -19,6 +19,7 @@ function subtoolProductResults(call: ToolCallBlock, nodeSeq: number): readonly P
   return [{
     callId: call.callId,
     nodeSeq,
+    nodeTime: call.time,
     toolName: call.call?.name ?? RECOVERED_TOOL_RESULT_NAME,
     output,
     isError: false,
@@ -34,6 +35,7 @@ export function conversationProductResults(nodes: readonly ConversationNode[]): 
     return output === '' ? [] : [{
       callId: `assistant-${String(node.seq)}`,
       nodeSeq: node.seq,
+      nodeTime: node.time,
       toolName: ASSISTANT_TEXT_RESULT_NAME,
       output,
       isError: false,

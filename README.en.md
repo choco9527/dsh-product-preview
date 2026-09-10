@@ -4,6 +4,10 @@ The SVGA player is compiled into the browser bundle, with a build check against 
 
 Compact Finder-style columns give media previews more room while preserving original file and directory names. Format and size remain visible; expand file details for the full path and source. Messages accepted from the artifact view return to Chat, including queued messages; failed sends keep the current view.
 
+The left column uses a read-only React Flow graph. Dashed edges indicate conversation order, not inferred asset dependencies. Selecting a node retains the file column and existing image, video, and SVGA previews. Pan and zoom are available; editing, connecting, and deletion are disabled. Graph gestures do not switch conversation tabs. The graph mounts on demand, with its runtime and CSS embedded in the browser bundle rather than downloaded at runtime.
+
+Each node shows the time of the conversation event that first reported its artifacts in small text, using the local time zone, with the full date on hover. Missing timestamps are omitted. Sequence numbers use subdued text even when selected, distinct from the node title.
+
 [`中文`](./README.md)
 
 `dsh-product-preview` adds a Finder-style conversation view for local media files produced during a DSH session.

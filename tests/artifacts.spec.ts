@@ -18,12 +18,12 @@ describe('product artifact projection', () => {
       },
     })
     expect(productArtifacts([
-      { callId: 'first', nodeSeq: 11, toolName: 'image_generator', output, isError: false },
-      { callId: 'repeat', nodeSeq: 20, toolName: 'poll_result', output: '/outputs/campaign/first.png', isError: false },
+      { callId: 'first', nodeSeq: 11, nodeTime: 1700000011000, toolName: 'image_generator', output, isError: false },
+      { callId: 'repeat', nodeSeq: 20, nodeTime: 1700000020000, toolName: 'poll_result', output: '/outputs/campaign/first.png', isError: false },
       { callId: 'failure', nodeSeq: 21, toolName: 'other_generator', output: '/outputs/campaign/failed.mp4', isError: true },
     ])).toEqual([
-      expect.objectContaining({ nodeId: 'first', nodeSeq: 11, kind: 'image', localPath: '/outputs/campaign/first.png' }),
-      expect.objectContaining({ nodeId: 'first', nodeSeq: 11, kind: 'svga', localPath: '/outputs/campaign/animation.svga' }),
+      expect.objectContaining({ nodeId: 'first', nodeSeq: 11, nodeTime: 1700000011000, kind: 'image', localPath: '/outputs/campaign/first.png' }),
+      expect.objectContaining({ nodeId: 'first', nodeSeq: 11, nodeTime: 1700000011000, kind: 'svga', localPath: '/outputs/campaign/animation.svga' }),
     ])
   })
 
@@ -51,6 +51,15 @@ describe('product artifact projection', () => {
       output: 'https://cdn.example.test/image.png /outputs/readme.txt',
       isError: false,
     }])).toEqual([])
+  })
+
+  it('omits the timestamp when a result has no event time', () => {
+    const artifacts = productArtifacts([{
+      callId: 'untimed', nodeSeq: 1, toolName: 'image_job',
+      output: '/outputs/image.png', isError: false,
+    }])
+    expect(artifacts).toHaveLength(1)
+    expect(artifacts[0]).not.toHaveProperty('nodeTime')
   })
 
   it.each('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))('preserves drive %s in text and JSON media paths', drive => {

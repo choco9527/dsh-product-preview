@@ -26,6 +26,7 @@
     "cordis.patch.yml",
     "lib/**/*.js",
     "lib/**/*.map",
+    "lib/flow-licenses.txt",
     "lib/types/**/*.d.ts",
     "README.md",
     "README.en.md",
@@ -52,7 +53,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown && node scripts/check-client-bundle.mjs && tsc -p tsconfig.json --emitDeclarationOnly && tsc -p tsconfig.client.json --emitDeclarationOnly",
+    "build": "tsdown && node scripts/check-client-bundle.mjs && node scripts/collect-flow-licenses.mjs && tsc -p tsconfig.json --emitDeclarationOnly && tsc -p tsconfig.client.json --emitDeclarationOnly",
     "package": "corepack pnpm run build && corepack pnpm pack --pack-destination dist",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
@@ -89,10 +90,11 @@
     "@deepseek-ai/dsh-token-meter": "0.1.2-alpha.3",
     "@deepseek-ai/dsh-tool-todo": "0.1.2-alpha.3",
     "@deepseek-ai/dsh-workspace": "0.1.2-alpha.3",
-    "svga.lite": "1.6.1",
     "@types/node": "^22.15.32",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@xyflow/react": "12.11.6",
+    "svga.lite": "1.6.1",
     "tsdown": "0.22.2",
     "typescript": "6.0.3",
     "vitest": "4.1.8"

@@ -39,7 +39,7 @@ function hasNativeSwipeCompletion(): boolean {
 
 function isGestureTargetExcluded(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false
-  if (target.closest('input, textarea, select, [contenteditable="true"], video, audio, [role="slider"]') !== null) return true
+  if (target.closest('input, textarea, select, [contenteditable="true"], video, audio, [role="slider"], .react-flow') !== null) return true
   for (let current: Element | null = target; current !== null; current = current.parentElement) {
     if (!(current instanceof HTMLElement) || current.scrollWidth <= current.clientWidth) continue
     const overflowX = getComputedStyle(current).overflowX

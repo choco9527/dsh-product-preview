@@ -5,7 +5,13 @@ const STYLE_ID = 'dsh-product-preview-styles'
 const CSS = `
 .productPreviewView { height: 100%; min-height: 0; min-width: 0; container-type: inline-size; color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-1); }
 .productPreviewView, .productPreviewView * { box-sizing: border-box; }
-.productPreviewColumns { display: grid; grid-template-columns: minmax(140px, 21%) minmax(170px, 29%) minmax(0, 1fr); height: 100%; min-height: 0; overflow: hidden; }
+.productPreviewColumns { display: grid; grid-template-columns: minmax(235px, 26%) minmax(170px, 26%) minmax(0, 1fr); height: 100%; min-height: 0; overflow: hidden; }
+.productPreviewTimelineGraph { min-width:0; min-height:0; display:flex; flex-direction:column; border-right:1px solid var(--dsw-alias-border-l1); }
+.productPreviewGraphHint { margin:0; padding:10px 12px; font-size:11px; color:var(--dsw-alias-label-secondary); }
+.productPreviewGraphCanvas { flex:1; min-height:180px; --xy-background-color:var(--dsw-alias-bg-layer-1); --xy-edge-stroke:var(--dsw-alias-label-tertiary,#9ca3af); --xy-controls-button-background-color:var(--dsw-alias-bg-layer-1); --xy-controls-button-color:var(--dsw-alias-label-primary); }
+.productPreviewGraphCard { width:190px; height:84px; padding:14px; border:1px solid var(--dsw-alias-border-l1); border-radius:10px; text-align:left; background:var(--dsw-alias-bg-layer-1); color:inherit; cursor:pointer; box-shadow:0 2px 6px #00000008; }
+.productPreviewGraphCard[aria-current='true'] { border-color:var(--dsw-alias-function-primary,#4f7ff7); background:var(--dsw-alias-bg-layer-2); }
+.productPreviewGraphCard:focus-visible { outline:2px solid var(--dsw-alias-function-primary,#4f7ff7); outline-offset:2px; }
 .productPreviewColumn { min-width: 0; min-height: 0; overflow: auto; border-right: 1px solid var(--dsw-alias-border-l1); padding: 14px 6px; scrollbar-width: thin; }
 .productPreviewTimeline { background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 84%, var(--dsw-alias-bg-layer-2)); }
 .productPreviewFiles { background: var(--dsw-alias-bg-layer-1); }
@@ -15,13 +21,15 @@ const CSS = `
 .productPreviewNodeIcon { position: relative; z-index: 1; display: block; width: 6px; height: 6px; margin: 6px 3px 0; border-radius: 50%; color: var(--dsw-alias-label-secondary); background: currentColor; }
 .productPreviewRow:hover, .productPreviewFile:hover { background: var(--dsw-alias-bg-layer-2); }
 .productPreviewRow[aria-current='true'] .productPreviewRowText { color: var(--dsw-alias-function-primary, #4f7ff7); }
-.productPreviewRow[aria-current='true'] .productPreviewRowText span { color: inherit; }
+.productPreviewRow[aria-current='true'] .productPreviewNodeMeta { color: inherit; }
 .productPreviewRow[aria-current='true'] .productPreviewNodeIcon { color: var(--dsw-alias-function-primary, #4f7ff7); }
 .productPreviewFile[aria-current='true'] { color: var(--dsw-alias-function-primary, #4f7ff7); }
 .productPreviewRowText { display: grid; min-width: 0; gap: 5px; line-height: 1.4; }
 .productPreviewRowText strong, .productPreviewRowText span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .productPreviewRowText strong { font-size: 12px; font-weight: 550; }
 .productPreviewRowText span { color: var(--dsw-alias-label-secondary); font-size: 11px; }
+.productPreviewRowText .productPreviewNodeSequence, .productPreviewNodeTime { color: var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary)); }
+.productPreviewNodeTime { font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .productPreviewDirectory, .productPreviewFile, .productPreviewRoot { display: flex; align-items: center; gap: 7px; min-height: 32px; padding: 7px 8px; font-size: 12px; line-height: 1.4; }
 .productPreviewDirectory span, .productPreviewFile span, .productPreviewRoot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .productPreviewRoot { margin: 0 2px 8px; padding-bottom: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); color: var(--dsw-alias-label-secondary); font-size: 11px; }
@@ -51,7 +59,7 @@ const CSS = `
 .productPreviewSwipeCue[data-side='right'] { right: 0; border-radius: 18px 0 0 18px; }
 .productPreviewSwipeCueArrow { width: 20px; height: 20px; overflow: visible; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 15%)); }
 .productPreviewSwipeCueArrow[data-direction='next'] { transform: rotate(180deg); }
-@container (max-width: 600px) { .productPreviewColumns { grid-template-columns: 120px 150px minmax(180px, 1fr); overflow-x: auto; } .productPreviewDetail { padding: 12px; } }
+@container (max-width: 600px) { .productPreviewColumns { grid-template-columns: 235px 150px minmax(180px, 1fr); overflow-x: auto; } .productPreviewDetail { padding: 12px; } }
 `
 
 /** Install the artifact-preview styles once for a renderer document. */
