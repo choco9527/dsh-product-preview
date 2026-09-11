@@ -260,15 +260,25 @@ export function ProductPreviewView({ useChat, useSession, openView, t }: Props) 
   const artifacts = availability.artifacts
   const nodes = useMemo(() => timelineNodes(artifacts), [artifacts])
   const [selectedNodeId, setSelectedNodeId] = useState<string>()
-  const selectedNode = nodes.find(node => node.id === selectedNodeId) ?? nodes.at(0)
+  // The newest node is what a reader opens this view for, and it is also what
+  // the graph keeps in view; anchoring the default here keeps the highlighted
+  // card and the focused card the same one.
+  const selectedNode = nodes.find(node => node.id === selectedNodeId) ?? nodes.at(-1)
   const [selectedKey, setSelectedKey] = useState<string>()
   const selected = selectedNode?.artifacts.find(artifact => artifact.key === selectedKey) ?? selectedNode?.artifacts.at(0)
+  // Both ids stay unset until a reader picks something. Writing the resolved
+  // default back would pin the selection to whatever was newest at mount, and
+  // the next node to arrive would then read as an explicit older choice — which
+  // is exactly what stops the graph from following.
   useEffect(() => {
-    if (selectedNode !== undefined && selectedNode.id !== selectedNodeId) setSelectedNodeId(selectedNode.id)
-  }, [selectedNode, selectedNodeId])
+    // A node the reader picked can disappear when its files stop being available.
+    if (selectedNodeId !== undefined && !nodes.some(node => node.id === selectedNodeId)) setSelectedNodeId(undefined)
+  }, [nodes, selectedNodeId])
   useEffect(() => {
-    if (selected !== undefined && selected.key !== selectedKey) setSelectedKey(selected.key)
-  }, [selected, selectedKey])
+    if (selectedKey !== undefined && !(selectedNode?.artifacts.some(artifact => artifact.key === selectedKey) ?? false)) {
+      setSelectedKey(undefined)
+    }
+  }, [selectedNode, selectedKey])
   if (availability.pending) return <section className="productPreviewView productPreviewEmpty">{t('scanning')}</section>
   if (nodes.length === 0) return <section className="productPreviewView productPreviewEmpty">{t('noArtifact')}</section>
   return <section aria-label={t('title')} className="productPreviewView">
