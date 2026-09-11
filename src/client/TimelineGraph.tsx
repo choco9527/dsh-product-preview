@@ -1,6 +1,6 @@
 /** Read-only conversation-order navigation; edges do not assert artifact provenance. */
 import { useMemo, type ReactNode } from 'react'
-import { Background, Controls, Handle, PanOnScrollMode, Position, ReactFlow, type Node, type NodeProps } from '@xyflow/react'
+import { Background, Controls, Handle, MarkerType, PanOnScrollMode, Position, ReactFlow, type Node, type NodeProps } from '@xyflow/react'
 import flowCss from '@xyflow/react/dist/style.css?inline'
 
 type TimelineData = { content: ReactNode; active: boolean; select: () => void }
@@ -18,7 +18,7 @@ const nodeTypes = { timeline: TimelineGraphCard }
 export function timelineGraphLayout(ids: readonly string[]) {
   return {
     positions: ids.map((id, index) => ({ id, position: { x: 0, y: index * 108 } })),
-    edges: ids.slice(1).map((id, index) => ({ id: `order-${index}`, source: ids[index]!, target: id, style: { strokeDasharray: '4 4' } })),
+    edges: ids.slice(1).map((id, index) => ({ id: `order-${index}`, source: ids[index]!, target: id, style: { strokeDasharray: '4 4' }, markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 } })),
   }
 }
 

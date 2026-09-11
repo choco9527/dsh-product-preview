@@ -5,14 +5,14 @@ const observed = vi.hoisted(() => ({ props: {} as Record<string, unknown> }))
 vi.mock('@xyflow/react', () => ({
   ReactFlow: (props: Record<string, unknown>) => { observed.props = props; return null },
   Handle: () => null, Controls: () => null, Background: () => null, Position: { Top: 'top', Bottom: 'bottom' },
-  PanOnScrollMode: { Vertical: 'vertical' },
+  PanOnScrollMode: { Vertical: 'vertical' }, MarkerType: { ArrowClosed: 'arrowclosed' },
 }))
 import TimelineGraph, { TimelineGraphCard, timelineGraphLayout } from '../src/client/TimelineGraph.tsx'
 
 describe('read-only conversation graph', () => {
   it('preserves recorded IDs and event order without changing inputs', () => {
     const ids = Object.freeze(['late-id', 'early-id'])
-    expect(timelineGraphLayout(ids).edges).toEqual([{ id: 'order-0', source: 'late-id', target: 'early-id', style: { strokeDasharray: '4 4' } }])
+    expect(timelineGraphLayout(ids).edges).toEqual([{ id: 'order-0', source: 'late-id', target: 'early-id', style: { strokeDasharray: '4 4' }, markerEnd: { type: 'arrowclosed', width: 14, height: 14 } }])
     expect(timelineGraphLayout([]).edges).toEqual([])
   })
   it('disables editing and delegates selection to the existing preview', () => {
