@@ -10,13 +10,15 @@ Each node shows the time of the conversation event that first reported its artif
 
 [`中文`](./README.md)
 
-`dsh-product-preview` adds a Finder-style conversation view for local media files produced during a DSH session.
+`dsh-product-preview` adds a Finder-style conversation view for local file artifacts. ZIP, JSON, PDF, spreadsheets, and other files without inline renderers retain file details, Open, and Show in folder actions.
+
+Transparent VAP playback uses `video-animation-player` independently of company component libraries. It accepts MP4 files with embedded `vapc` metadata and ZIP files containing one MP4 and optional `vapc.json`, preserving frame rate with muted looping playback. Ordinary MP4 and ZIP files retain their video and file views. ZIP decoding stays in memory: input and selected expanded files are limited to 64 MiB, configuration to 1 MiB, and entry count to 128. Dynamic VAPX resource bindings are unsupported. File switches cancel reads and release the player and Blob URL. Player code ships in the browser bundle and initializes on selection, without downloading scripts at runtime. Failed previews retain access to the original file.
 
 On desktop, a two-finger horizontal swipe across the content area switches between Chat, Products, and Trajectory. The edge cue grows with the gesture and stays hidden when no adjacent tab exists.
 
 ![Three-column product preview](./assets/product-preview-demo.png)
 
-It reads successful tool results and assistant text, discovers absolute paths to supported images, videos, and SVGA files, then assigns each path to the first timeline node that reported it. The UI keeps the original directory and file names. Only existing files under `allowedRoots` receive short-lived same-origin preview URLs.
+It reads successful tool results and assistant text, discovers absolute file paths, then assigns each path to the first timeline node that reported it. Extensionless files can be reported as JSON path values, backtick paths, or Markdown links. The UI preserves names and only lists existing regular files under `allowedRoots`, without scanning directories. Non-media content is served as an attachment. The preview size limit does not exclude files from the list.
 
 The bundle has no product or Bot dependency. A Desktop host may optionally expose native actions such as Open, Reveal in Finder, and the context menu through `/api/product-preview/actions`.
 

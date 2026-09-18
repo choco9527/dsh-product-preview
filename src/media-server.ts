@@ -33,6 +33,7 @@ interface MediaToken extends ResolvedProductMedia {
 }
 
 function mediaMimeType(kind: ProductMediaKind, path: string): string {
+  if (kind === 'file') return 'application/octet-stream'
   const extension = path.split('.').at(-1)?.toLowerCase()
   if (kind === 'svga') return 'application/octet-stream'
   if (kind === 'image') {
@@ -126,7 +127,7 @@ export class ProductPreviewMediaServer {
     ])
     if (path === undefined || !roots.some(root => root !== undefined && isWithinRoot(path, root))) return undefined
     const info = await stat(path).catch(() => undefined)
-    if (info === undefined || !info.isFile() || info.size > this.maxFileBytes) return undefined
+    if (info === undefined || !info.isFile()) return undefined
     return { path, kind, size: info.size }
   }
 
@@ -186,6 +187,7 @@ export class ProductPreviewMediaServer {
     this.purge()
     const token = this.tokens.get(id)
     if (token === undefined) return sendJson(response, 404, { error: 'media is unavailable' })
+    if (token.kind !== 'file' && token.size > this.maxFileBytes) return sendJson(response, 413, { error: 'preview is too large' })
     const range = singleRange(request.headers.range, token.size)
     if (request.headers.range !== undefined && range === undefined) {
       response.statusCode = 416
@@ -201,6 +203,10 @@ export class ProductPreviewMediaServer {
     response.setHeader('content-type', token.mimeType)
     response.setHeader('content-length', String(end - start + 1))
     response.setHeader('x-content-type-options', 'nosniff')
+    if (token.kind === 'file') {
+      response.setHeader('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(token.path.split(/[\\/]/u).at(-1) ?? 'file')}`)
+    }
+    if (token.size === 0) { response.end(); return }
     if (range !== undefined) response.setHeader('content-range', `bytes ${String(start)}-${String(end)}/${String(token.size)}`)
     createReadStream(token.path, { start, end }).pipe(response)
   }

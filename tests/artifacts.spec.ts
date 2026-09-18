@@ -6,7 +6,7 @@ describe('product artifact projection', () => {
     expect(productMediaKind('/delivery/a.png')).toBe('image')
     expect(productMediaKind('/delivery/a.MP4')).toBe('video')
     expect(productMediaKind('/delivery/a.svga')).toBe('svga')
-    expect(productMediaKind('/delivery/a.txt')).toBeUndefined()
+    expect(productMediaKind('/delivery/a.txt')).toBe('file')
   })
 
   it('discovers local paths recursively from every successful producer and retains the first node', () => {
@@ -43,14 +43,22 @@ describe('product artifact projection', () => {
     })])
   })
 
-  it('does not turn remote URLs or unsupported local files into Finder entries', () => {
+  it('includes non-media files while excluding remote URLs', () => {
     expect(productArtifacts([{
       callId: 'mixed',
       nodeSeq: 7,
       toolName: 'generic_tool',
       output: 'https://cdn.example.test/image.png /outputs/readme.txt',
       isError: false,
-    }])).toEqual([])
+    }])).toEqual([expect.objectContaining({ localPath: '/outputs/readme.txt', kind: 'file' })])
+  })
+
+  it.each(['video.vap.zip', 'report.pdf', 'sheet.xlsx', 'data.json', 'README'])('retains %s from an explicit delivered path', name => {
+    const path = `/Users/alex/BBA 交付/${name}`
+    for (const output of [JSON.stringify({ output: path }), `已保存：\`${path}\``, `[文件](<${path}>)`]) {
+      expect(productArtifacts([{ callId: 'file', nodeSeq: 1, toolName: 'assistant_text', output, isError: false }]))
+        .toContainEqual(expect.objectContaining({ localPath: path, kind: 'file' }))
+    }
   })
 
   it('omits the timestamp when a result has no event time', () => {

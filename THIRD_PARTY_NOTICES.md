@@ -1,5 +1,7 @@
 # Third-party notices
 
+The browser bundle also includes `video-animation-player` 1.0.5 (MIT), with source copyright (C) 2020 THL A29 Limited, a Tencent company. Its use is covered by the MIT permission and disclaimer below. `fflate` 0.8.2 and its MIT license are included in `lib/flow-licenses.txt` alongside the graph dependency notices.
+
 The browser bundle includes svga.lite 1.6.1, published by JOYY.UED at https://www.npmjs.com/package/svga.lite/v/1.6.1. That release declares the MIT license and carries the following copyright notice:
 
 Copyright (c) 2019 YY.SVGA

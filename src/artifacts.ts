@@ -1,6 +1,6 @@
 /** Project successful conversation results into local previewable files. */
 
-export type ProductMediaKind = 'image' | 'video' | 'svga'
+export type ProductMediaKind = 'image' | 'video' | 'svga' | 'file'
 
 /** One local file first reported by one durable conversation node. */
 export interface ProductArtifact {
@@ -32,7 +32,7 @@ interface JsonRecord {
 
 const IMAGE_EXTENSIONS = new Set(['gif', 'jpeg', 'jpg', 'png', 'webp'])
 const VIDEO_EXTENSIONS = new Set(['m4v', 'mov', 'mp4', 'webm'])
-const MEDIA_PATH_SUFFIX = String.raw`(?:gif|jpe?g|m4v|mov|mp4|png|svga|webm|webp)`
+const MEDIA_PATH_SUFFIX = String.raw`(?:[a-z0-9][a-z0-9_-]*)`
 // Preserve drive letters and UNC shares; do not reinterpret URI suffixes as POSIX paths.
 const LOCAL_MEDIA_ROOT = String.raw`(?:[a-z]:[\\/]|\\\\(?![?.]\\)[^\\/\s]+\\[^\\/\r\n]+\\|(?<![a-z0-9+.-]:)/(?!/))`
 const LOCAL_MEDIA_PATH = new RegExp(
@@ -46,13 +46,13 @@ function extension(path: string): string | undefined {
   return index < 0 ? undefined : segment.slice(index + 1).toLowerCase()
 }
 
-/** Classify only media formats that the preview surface can render. */
+/** Files without an inline renderer remain downloadable artifacts. */
 export function productMediaKind(path: string): ProductMediaKind | undefined {
   const value = extension(path)
   if (value === 'svga') return 'svga'
   if (value !== undefined && IMAGE_EXTENSIONS.has(value)) return 'image'
   if (value !== undefined && VIDEO_EXTENSIONS.has(value)) return 'video'
-  return undefined
+  return 'file'
 }
 
 function title(path: string): string {
@@ -71,9 +71,17 @@ function stringsInJson(value: unknown): readonly string[] {
 }
 
 function localPathsInText(value: string): readonly string[] {
+  // JSON path values and backtick links also carry files without an extension.
+  const explicit = [...value.matchAll(/`([^`\r\n]+)`|\]\((?:<([^>\r\n]+)>|([^\s)]+))\)/gu)]
+    .flatMap(match => [match[1] ?? match[2] ?? match[3] ?? ''])
+    .filter(path => new RegExp(`^${LOCAL_MEDIA_ROOT}`, 'iu').test(path))
+  if (new RegExp(`^${LOCAL_MEDIA_ROOT}`, 'iu').test(value) && !/[\r\n`]/u.test(value)) {
+    explicit.push(value)
+  }
   return [...value.matchAll(LOCAL_MEDIA_PATH)]
     .map(match => match.groups?.path)
     .filter((path): path is string => path !== undefined)
+    .concat(explicit)
 }
 
 function localPaths(output: string): readonly string[] {

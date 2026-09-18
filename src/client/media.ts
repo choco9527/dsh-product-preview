@@ -16,7 +16,7 @@ function isResolvedMedia(value: unknown): value is ResolvedMedia {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
   const record = value as Record<string, unknown>
   return typeof record.id === 'string'
-    && (record.kind === 'image' || record.kind === 'video' || record.kind === 'svga')
+    && (record.kind === 'image' || record.kind === 'video' || record.kind === 'svga' || record.kind === 'file')
     && typeof record.mimeType === 'string'
     && typeof record.size === 'number'
     && typeof record.url === 'string'

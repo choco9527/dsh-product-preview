@@ -52,6 +52,36 @@ function sameOriginHeaders(origin: string): HeadersInit {
 }
 
 describe('ProductPreviewMediaServer', () => {
+  it('lists generic and empty files but refuses directories and missing files', async () => {
+    const root = await temporaryDirectory()
+    const media = new ProductPreviewMediaServer({ allowedRoots: [root], maxFileBytes: 1 }, '127.0.0.1:1')
+    for (const name of ['video.vap.zip', 'data.json', 'report.pdf', 'README']) {
+      const file = join(root, name)
+      await writeFile(file, name === 'README' ? '' : 'artifact')
+      expect(await media.resolve(file)).toMatchObject({ kind: 'file', mimeType: 'application/octet-stream' })
+    }
+    expect(await media.validate(root)).toBe(false)
+    expect(await media.validate(join(root, 'missing.zip'))).toBe(false)
+  })
+
+  it('serves unpreviewable content as an attachment, including an empty file', async () => {
+    const root = await temporaryDirectory()
+    const started = await startMediaServer(host => new ProductPreviewMediaServer({ allowedRoots: [root] }, host))
+    try {
+      for (const content of ['', '<script>alert(1)</script>']) {
+        const file = join(root, '交付.html')
+        await writeFile(file, content)
+        const resolved = await started.media!.resolve(file)
+        const response = await fetch(`${started.origin}${resolved!.url}`, { headers: sameOriginHeaders(started.origin) })
+        expect(response.status).toBe(200)
+        expect(response.headers.get('content-type')).toBe('application/octet-stream')
+        expect(response.headers.get('content-disposition')).toContain('attachment;')
+        expect(response.headers.get('content-length')).toBe(String(Buffer.byteLength(content)))
+        expect(await response.text()).toBe(content)
+      }
+    } finally { await started.close() }
+  })
+
   it('refuses a symlink that escapes the configured delivery root', async () => {
     const root = await temporaryDirectory()
     const outside = await temporaryDirectory()

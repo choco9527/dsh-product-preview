@@ -26,6 +26,7 @@ function collect(name, from) {
   }
 }
 collect('@xyflow/react', new URL('../package.json', import.meta.url))
+collect('fflate', new URL('../package.json', import.meta.url))
 writeFileSync(new URL('../lib/flow-licenses.txt', import.meta.url),
   [...licenses].sort(([a], [b]) => a.localeCompare(b)).map(([name, license]) => name + '\n\n' + license).join('\n\n'))
 console.log('Preserved React Flow dependency licenses: ' + licenses.size)

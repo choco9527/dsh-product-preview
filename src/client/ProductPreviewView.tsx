@@ -18,6 +18,7 @@ import { useReturnToChat } from './submission-navigation.ts'
 
 type Props = ConvViewProps & PropsLocale<'product-preview'> & { readonly useChat: UseChat }
 const TimelineGraph = lazy(() => import('./TimelineGraph.tsx'))
+const VapPreview = lazy(() => import('./VapPreview.tsx'))
 
 interface TimelineNode {
   readonly id: string
@@ -172,6 +173,8 @@ function MediaCanvas({ artifact, media, t }: {
   readonly t: Props['t']
 }) {
   const url = media?.url
+  if (media && /\.(?:mp4|zip)$/iu.test(artifact.localPath)) return <Suspense fallback={<p>{t('loading')}</p>}><VapPreview key={media.url} url={media.url} size={media.size} zip={/\.zip$/iu.test(artifact.localPath)} t={t} /></Suspense>
+  if (artifact.kind === 'file') return <div role="status"><FileIcon kind="file" /><p>{t('fileOnly')}</p></div>
   if (artifact.kind === 'image') return url === undefined ? <p>{t('unavailable')}</p> : <img alt={t('imageAlt')} src={url} />
   if (artifact.kind === 'video') return url === undefined ? <p>{t('unavailable')}</p> : <video controls preload="metadata" src={url}>{t('unsupported')}</video>
   return url === undefined ? <p role="status">{t('loading')}</p> : <SvgaPreview key={url} t={t} url={url} />
@@ -240,7 +243,10 @@ function DetailColumn({ artifact, t }: { readonly artifact: ProductArtifact | un
     <div className="productPreviewCanvas"><MediaCanvas artifact={artifact} media={media} t={t} /></div>
     <h3 title={artifact.title}>{artifact.title}</h3>
     <p className="productPreviewSummary">{artifact.title.split('.').at(-1)?.toUpperCase()}{media === undefined ? '' : ` · ${media.size < 1024 * 1024 ? `${(media.size / 1024).toFixed(1)} KB` : `${(media.size / 1024 / 1024).toFixed(1)} MB`}`}</p>
-    <div className="productPreviewActions"><button onClick={() => { void invokeProductPreviewAction(artifact.localPath, 'reveal') }} type="button"><FileIcon kind="folder" />{t('reveal')}</button></div>
+    <div className="productPreviewActions">
+      <button onClick={() => { void invokeProductPreviewAction(artifact.localPath, 'open') }} type="button">{t('open')}</button>
+      <button onClick={() => { void invokeProductPreviewAction(artifact.localPath, 'reveal') }} type="button"><FileIcon kind="folder" />{t('reveal')}</button>
+    </div>
     <details className="productPreviewInfo"><summary>{t('details')}</summary><dl className="productPreviewMetadata">
       <div><dt>{t('file')}</dt><dd>{artifact.localPath}</dd></div>
       <div><dt>{t('source')}</dt><dd>{artifact.producer}</dd></div>
